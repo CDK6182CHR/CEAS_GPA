@@ -1,4 +1,4 @@
-from courselib import CourseLib
+from ceasgpa.courselib import CourseLib
 
 courseLib = CourseLib()
 courseLib.readLibFile()

@@ -4,7 +4,7 @@
 """
 from typing import Union,Dict
 import openpyxl
-from course import Course
+from .course import Course
 import json
 
 class CourseLib(dict):
