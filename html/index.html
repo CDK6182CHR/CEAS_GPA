@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<!--
+本地的基于html和javascript的GPA计算程序。
+-->
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>现工院GPA计算系统</title>
+</head>
+
+<body>
+    <center>
+        <h1>现工院GPA计算系统</h1>
+        <table>
+            <tr>
+                <td>选择专业</td>
+                <td>开始学期</td>
+                <td>结束学期</td>
+                <td>计算类型</td>
+                <td>操作</td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="selectMajor">
+                        <option value="材料物理">材料物理</option>
+                        <option value="材料化学">材料化学</option>
+                        <option value="光电信息">光电信息</option>
+                        <option value="新能源">新能源</option>
+                        <option value="生医工程">生医工程</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="startSemester">
+                        <option value="1">第1学期</option>
+                        <option value="2">第2学期</option>
+                        <option value="3">第3学期</option>
+                        <option value="4">第4学期</option>
+                        <option value="5">第5学期</option>
+                        <option value="6">第6学期</option>
+                        <option value="7">第7学期</option>
+                        <option value="8">第8学期</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="endSemester">
+                        <option value="1">第1学期</option>
+                        <option value="2">第2学期</option>
+                        <option value="3">第3学期</option>
+                        <option value="4">第4学期</option>
+                        <option value="5">第5学期</option>
+                        <option value="6">第6学期</option>
+                        <option value="7">第7学期</option>
+                        <option value="8">第8学期</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="calculateType">
+                        <option value="2">A类/保研学分绩</option>
+                        <option value="1">C类/学年学分绩</option>
+                    </select>
+                </td>
+                <td>
+                    <button value="生成表单" onclick="makeForm();">生成表单</button>
+                </td>
+            </tr>
+        </table>
+        <p>
+            点击“生成表单”后自动产生对应专业、类型所要计算的课程及学分表格。如果要取消某门课程，将其学分改为0即可；
+            也可以自行增加其他课程。
+        </p>
+        <table id="courseTable">
+            <tr>
+                <td>
+                    课程名
+                </td>
+                <td>
+                    学分数
+                </td>
+                <td>
+                    成绩
+                </td>
+            </tr>
+        </table>
+        <pre>
+        <button onclick="addCourse();">添加课程</button> &nbsp; <button onclick="calculate();">计算</button>
+    </pre>
+        <table>
+            <tr>
+                <td>
+                    课程总数
+                </td>
+                <td>
+                    学分总数
+                </td>
+                <td>
+                    平均分
+                </td>
+                <td>
+                    学分绩
+                </td>
+            </tr>
+            <tr>
+                <td id="courseCount">
+
+                </td>
+                <td id="creditSum">
+
+                </td>
+                <td id="averageMarks">
+                    
+                </td>
+                <td id="GPA">
+                    
+                </td>
+            </tr>
+        </table>
+        <p id="test">
+
+        </p>
+        <script type="text/javascript" src="courseLib.js"></script>
+        <script type="text/javascript" language="javascript">
+            function addCourseItem(name,credits){
+                var table=document.getElementById("courseTable");
+                var eletr = document.createElement("tr");
+                var eletd0 = document.createElement("td");
+                var inputName = document.createElement("input");
+                inputName.type="text";
+                inputName.value=name;
+                eletd0.appendChild(inputName);
+                eletr.appendChild(eletd0);
+                var eletd1 = document.createElement("td");
+                var inputCred=document.createElement("input");
+                inputCred.type="text";
+                inputCred.value=credits.toString();
+                eletd1.appendChild(inputCred);
+                eletr.appendChild(eletd1);
+                var eletd2=document.createElement("td");
+                var inputGrade = document.createElement("input");
+                inputGrade.type="text";
+                eletd2.appendChild(inputGrade)
+                eletr.appendChild(eletd2);
+                table.appendChild(eletr);
+            }
+            
+            function addCourse(){
+                addCourseItem("","");
+            }
+
+            function makeForm(){
+                var start=parseInt(document.getElementById("startSemester").value);
+                var end=parseInt(document.getElementById("endSemester").value);
+                var majorName = document.getElementById("selectMajor").value;
+                var calculateType = parseInt(document.getElementById("calculateType").value);
+                if(start>end){
+                    alert("npssl!\n开始学期必须小于或等于结束学期。");
+                    return;
+                }
+                var table=document.getElementById("courseTable");
+                var children=table.getElementsByTagName("tr");
+                for(var i=children.length-1;i>=1;i--){
+                    children[i].parentElement.removeChild(children[i]);
+                }
+                for(var i=0;i<courseLib.length;i++){
+                    var course=courseLib[i];
+                    if(course.semester>=start&&course.semester<=end){
+                        if(course.majorTypes[majorName] & calculateType){
+                            addCourseItem(course.name,course.credits);
+                        }
+                    }
+                }
+            }
+            //constructor
+            function Course(name,credits,grades){
+                this.name=name;
+                if(credits==NaN)
+                    credits=0;
+                if(grades==NaN)
+                    grades=0;
+                this.credits=credits;
+                this.grades=grades;
+            }
+
+            //读取和校验数据，返回数组
+            function getGrades(){
+                var lst=new Array();
+                var table=document.getElementById("courseTable");
+                var children=table.getElementsByTagName("tr");
+                for(var i=1;i<children.length;i++){
+                    var row=children[i].getElementsByTagName("input");
+                    var name=row[0].value;
+                    var credits=parseInt(row[1].value);
+                    var grades=parseInt(row[2].value);
+                    lst.push(
+                        new Course(name,credits,grades)
+                    );
+                }
+                return lst;
+            }
+            
+            function calculate(){
+                var lst=getGrades();
+                var courseCount=0,totalCredits=0,totalGrades=0;
+                for(var i=0;i<lst.length;i++){
+                    var course=lst[i];
+                    if(course.credits!=0){
+                        courseCount++;
+                        totalCredits+=course.credits;
+                        totalGrades+=course.grades*course.credits;
+                    }
+                }
+                if(totalCredits==0){
+                    alert("npssl!\n学分数为0。");
+                    return;
+                }
+                var ave=totalGrades/totalCredits;
+                document.getElementById("courseCount").innerHTML=courseCount;
+                document.getElementById("creditSum").innerHTML=totalCredits;
+                document.getElementById("averageMarks").innerHTML=ave.toFixed(4);
+                var gpa=ave/20;
+                document.getElementById("GPA").innerHTML=gpa.toFixed(4);
+            }
+        </script>
+    </center>
+</body>
+
+</html>
