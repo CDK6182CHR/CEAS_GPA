@@ -173,9 +173,9 @@
             //constructor
             function Course(name,credits,grades){
                 this.name=name;
-                if(credits==NaN)
+                if(isNaN(credits))
                     credits=0;
-                if(grades==NaN)
+                if(isNaN(grades))
                     grades=0;
                 this.credits=credits;
                 this.grades=grades;
@@ -190,7 +190,7 @@
                     var row=children[i].getElementsByTagName("input");
                     var name=row[0].value;
                     var credits=parseInt(row[1].value);
-                    var grades=parseInt(row[2].value);
+                    var grades=parseFloat(row[2].value);
                     lst.push(
                         new Course(name,credits,grades)
                     );
