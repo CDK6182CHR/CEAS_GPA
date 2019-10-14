@@ -11,7 +11,8 @@
 
 <body>
     <center>
-        <h1>现工院GPA计算系统</h1>
+        <h2>现代工程与应用科学学院</h2>
+        <h1>本科生学分绩计算系统</h1>
         <table>
             <tr>
                 <td>选择专业</td>
@@ -69,6 +70,14 @@
             点击“生成表单”后自动产生对应专业、类型所要计算的课程及学分表格。如果要取消某门课程，将其学分改为0即可；
             也可以自行增加其他课程。
         </p>
+        <p>
+            本系统自动生成的课程表单是依据内置的数据。点击<a href="majorCourses.html" target="_blank">此处</a>可查看数据。
+        </p>
+
+        <pre>
+            <button onclick="addCourse();">添加课程</button> &nbsp; <button onclick="calculate();">计算</button>
+        </pre>
+        
         <table id="courseTable">
             <tr>
                 <td>
@@ -82,9 +91,7 @@
                 </td>
             </tr>
         </table>
-        <pre>
-        <button onclick="addCourse();">添加课程</button> &nbsp; <button onclick="calculate();">计算</button>
-    </pre>
+        
         <table>
             <tr>
                 <td>
@@ -221,6 +228,13 @@
                 document.getElementById("GPA").innerHTML=gpa.toFixed(4);
             }
         </script>
+        <p>
+            作者：萧迩珀（2017材料化学） mxy0268@qq.com
+        </p>
+        <p>
+            本系统源代码开放，请移步<a href="https://github.com/CDK6182CHR/CEAS_GPA" target="_blank">github</a>查看。
+            如需原始数据，请联系我。
+        </p>
     </center>
 </body>
 

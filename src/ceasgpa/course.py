@@ -8,12 +8,14 @@ class Course:
         0b10:'A类-本专业升学',
         0b01:'C类-就业创业',
     }
-    def __init__(self,name,id,semester,credits):
+    def __init__(self,name,id,semester,credits,majorTypes=None):
         self.name = name  # type:str
         self.id = id  # type:str
         self.semester = semester  # type:int
         self.credits = credits  # type:int
-        self.majorTypes = {}  # type:Dict[str,int]
+        if majorTypes is None:
+            majorTypes={}
+        self.majorTypes = majorTypes  # type:Dict[str,int]
 
     def addMajor(self,majorName:str,tp:int):
         self.majorTypes[majorName]=tp

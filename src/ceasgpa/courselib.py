@@ -1,14 +1,14 @@
 """
 课程库类。继承dict，数据结构为：课程名->Course对象。
 在此处实现IO。
+暂时用课程名映射。
 """
 from typing import Union,Dict
-import openpyxl
 from .course import Course
 import json
 
 class CourseLib(dict):
-    ValidMajors = ('材料物理','材料化学','光电信息','新能源','生医工程')
+    ValidMajors = ('材料物理','材料化学','光电信息','新能源','生物医学工程')
     def __init__(self):
         super(CourseLib, self).__init__()
 
@@ -19,6 +19,7 @@ class CourseLib(dict):
     SemesterCol = 4
     MajorStartCol = 6  # 个数为ValidMajors
     def readLibFile(self,filename='../data/课程性质数据维护.xlsx'):
+        import openpyxl
         self.clear()
         wb = openpyxl.load_workbook(filename,read_only=True)
         ws = wb.get_sheet_by_name(wb.sheetnames[0])
@@ -58,7 +59,8 @@ class CourseLib(dict):
                     # 不填的默认为0
                     tp=0b00
                 course.addMajor(major_cols[col],tp)
-            self[courseName]=course
+            # self[courseName]=course
+            self[courseId]=course
         wb.close()
 
     def saveJson(self,filename='../data/courseLib.json'):
@@ -84,3 +86,19 @@ class CourseLib(dict):
                         if course.getMajorType(major) & tpCode and course.semester==seme:
                             fp.write(f'* {course.name} {course.credits}学分\n')
         fp.close()
+
+    def readJson(self,filename='../data/courseLib.json'):
+        with open(filename,encoding='utf-8',errors='ignore') as fp:
+            data = json.load(fp)
+            for st in data:
+                # self[st['name']]=Course(**st)
+                self[st['id']]=Course(**st)
+
+    def courseByName(self,name)->Course:
+        return self[name]
+
+    def courseById(self,id)->Course:
+        for _,course in self.items():
+            if course.id == id:
+                return course
+        return None
