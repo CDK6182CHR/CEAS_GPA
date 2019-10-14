@@ -13,6 +13,30 @@ class StudentGrade:
         self._source = {}  # type:Dict[str,List[Grade]]
         self._table = {}  # type:Dict[str,Grade]
         self._ok = False
+        self.gpa = 0  # type: float
 
     def addGrade(self,grade:Grade):
-        self._source.setdefault(grade.course_number,[]).append(grade)
+        cur = self._source.setdefault(grade.course_number,[])
+        if grade not in cur:
+            cur.append(grade)
+
+    def calculate(self)->float:
+        if not self._ok:
+            print("Not ready yet!")
+            return 0
+        totalGrades,totalCredits = 0,0
+        for course_id,grade in self._table.items():
+            totalCredits+=grade.credits
+            totalGrades+=grade.total*grade.credits
+        if totalCredits == 0:
+            print("totalCredits==0!")
+            return 0
+        self.gpa = totalGrades/totalCredits/20
+        return self.gpa
+
+    def getCourseGrade(self,course_id:str):
+        grade = self._table.get(course_id,None)
+        if grade is None:
+            print("Unexpceted not found course",course_id)
+            return 0
+        return grade.total

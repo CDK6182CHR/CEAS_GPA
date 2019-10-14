@@ -24,4 +24,4 @@ class Course:
         return self.majorTypes.get(majorName,default)
 
     def __str__(self):
-        return self.name
+        return f"{self.id} {self.name} {self.credits}学分"

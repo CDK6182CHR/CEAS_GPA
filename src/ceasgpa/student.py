@@ -9,3 +9,6 @@ class Student:
 
     def __hash__(self):
         return hash(self.number)
+
+    def __str__(self):
+        return f"{self.number} {self.name} {self.major}"

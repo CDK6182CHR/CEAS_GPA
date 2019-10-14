@@ -19,6 +19,9 @@ class GradeLib(dict):
     SemesterCol = 7
     TypeCol = 10
     TotalCol = 14
+    Note2Col = 17
+    FlagCol = 18
+
     StartRow = 0  # 一般来说第0行总是无效的，但有的数据的表头在最后。
     # 对于学号为“学号”出错的，不报错而直接继续
     def readFile(self,filename):
@@ -55,13 +58,18 @@ class GradeLib(dict):
                 print(f"Invalid total at file {filename}, "
                       f"row {row}:{total_str}")
                 total = 0
+            note2 = ws.cell_value(row,self.Note2Col)
+            try:
+                flag = ws.cell_value(row,self.FlagCol)
+            except IndexError:
+                flag = ''
             try:
                 self.setdefault(stu_num,
                     StudentGrade(
                     self.studentList.studentByNumber(stu_num))).addGrade(
                     Grade(
                     stu_num,course_number,course_name,credit,semester,
-                    course_type,total
+                    course_type,total,note2,flag
                 ))
             except KeyError:
                 print("Student not in list: ",stu_num)

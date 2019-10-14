@@ -69,6 +69,10 @@ class CourseLib(dict):
         ]
         with open(filename,'w',encoding='utf-8',errors='ignore') as fp:
             json.dump(data,fp,ensure_ascii=False)
+        with open(filename.rstrip('on'),'w',encoding='utf-8',errors='ignore') as fp:
+            fp.write("var courseLib=")
+            fp.write(json.dumps(data,ensure_ascii=False))
+            fp.write(';\n')
 
     def saveMarkdown(self,filename='../data/分专业课程清单.md'):
         """
@@ -84,7 +88,7 @@ class CourseLib(dict):
                     fp.write(f'#### 第{seme}学期\n')
                     for course in self.values():
                         if course.getMajorType(major) & tpCode and course.semester==seme:
-                            fp.write(f'* {course.name} {course.credits}学分\n')
+                            fp.write(f'* {course.name} {course.credits}学分 {course.id}\n')
         fp.close()
 
     def readJson(self,filename='../data/courseLib.json'):
@@ -102,3 +106,11 @@ class CourseLib(dict):
             if course.id == id:
                 return course
         return None
+
+    def majorCourseList(self,major:str,mode:int,start,end)->list:
+        lst = []
+        for id,course in self.items():
+            if course.getMajorType(major) & mode and start <= course.semester <= end:
+                lst.append(course)
+        return lst
+
