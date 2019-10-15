@@ -14,12 +14,13 @@ class Grade:
         self.semester = semester  # type:str
         self.grade_type = grade_type  # type:str
         self.total = total  # type:float
+        self.note = ""  # type:str  # 专用于本系统映射
         self.note2 = note2  # type:str
         self.flag = flag
 
     def __str__(self):
         return f"{self.stu_number} {self.course_number} {self.course_name} " \
-               f"{self.semester} {self.total} {self.note2} {self.flag}"
+               f"{self.semester} {self.total} {self.note2} {self.flag} {self.note}"
 
     def __eq__(self, other):
         if isinstance(other,Grade):
@@ -33,3 +34,10 @@ class Grade:
                 self.note2 == other.note2 and \
                 self.flag == other.flag
         return False
+
+    def mappedSemester(self,firstYear:str)->int:
+        if len(self.semester) != 5:
+            print(f"mappedSemester: Unexpected semester {self.semester}")
+            return 0
+        y,s = map(int,(self.semester[:4],self.semester[4:]))
+        return (y-int(firstYear))*2+s

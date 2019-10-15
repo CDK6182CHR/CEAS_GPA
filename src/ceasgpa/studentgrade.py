@@ -14,6 +14,8 @@ class StudentGrade:
         self._table = {}  # type:Dict[str,Grade]
         self._ok = False
         self.gpa = 0  # type: float
+        self.absentCount = 0  # type:int  # 缺课门数
+        self.absentNames = []
 
     def addGrade(self,grade:Grade):
         cur = self._source.setdefault(grade.course_number,[])
@@ -36,7 +38,6 @@ class StudentGrade:
 
     def getCourseGrade(self,course_id:str):
         grade = self._table.get(course_id,None)
-        if grade is None:
-            print("Unexpceted not found course",course_id)
-            return 0
+        if grade is None:  # 缺课返回空格
+            return ''
         return grade.total
