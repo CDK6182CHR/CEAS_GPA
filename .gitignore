@@ -4,3 +4,8 @@ data
 log
 .idea
 *.zip
+build
+dist
+*.spec
+*.exe
+bin
