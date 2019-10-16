@@ -13,7 +13,7 @@ class GpaCalculator:
         self.courseLib = CourseLib()
         self.courseLib.readLibFile()
         self.studentList = StudentList()
-        self.studentList.readJson()
+        self.studentList.readList()
         self.gradeLib = GradeLib(self.studentList)
         self.gradeLib.readFileList()
         self.precision = precision
