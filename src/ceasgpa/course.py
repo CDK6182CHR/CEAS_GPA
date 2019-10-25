@@ -8,6 +8,10 @@ class Course:
         0b10:'A类-本专业升学',
         0b01:'C类-就业创业',
     }
+    BriefTypes = {
+        0b10:'A',
+        0b01:'C',
+    }
     def __init__(self,name,id,semester,credits,majorTypes=None):
         self.name = name  # type:str
         self.id = id  # type:str

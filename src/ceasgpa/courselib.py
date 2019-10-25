@@ -5,6 +5,7 @@
 """
 from typing import Union,Dict
 from .course import Course
+from datetime import datetime
 import json
 
 class CourseLib(dict):
@@ -86,10 +87,42 @@ class CourseLib(dict):
                 fp.write(f'### {tpName}\n')
                 for seme in range(1,9):
                     fp.write(f'#### 第{seme}学期\n')
+                    fp.write("课程号 | 课程名 | 学分 \n")
+                    fp.write("-|-|-\n")
                     for course in self.values():
                         if course.getMajorType(major) & tpCode and course.semester==seme:
-                            fp.write(f'* {course.name} {course.credits}学分 {course.id}\n')
+                            fp.write(f'{course.id} | {course.name} | {course.credits} | \n')
         fp.close()
+
+    def saveCourseMarkdown(self,filename='../data/课程清单.md'):
+        """
+        以课程为主要字段计算。按学期排序，同一学期内按课程号排序。
+        """
+        fp = open(filename, 'w', encoding='utf-8', errors='ignore')
+        fp.write('# 现工院学分绩课程一览表\n')
+        fp.write(f'更新时间：{datetime.now().strftime("%Y-%m-%d %H-%M-%S")}\n')
+        fp.write('学期 | 课程号 | 课程名 | '+' | '.join(CourseLib.ValidMajors)+'\n')
+        fp.write('-|-|-|'+'-|'*len(CourseLib.ValidMajors)+'\n')
+        lst = list(self.values())
+        lst.sort(key=lambda x:(x.semester,x.id))
+        for course in lst:
+            course:Course
+            fp.write(f"{course.semester} | {course.id} | {course.name} |")
+            for major in CourseLib.ValidMajors:
+                fp.write(CourseLib.getMajorStr(course,major)+' | ')
+            fp.write('\n')
+        fp.close()
+
+
+    @staticmethod
+    def getMajorStr(course:Course,major:str):
+        s=[]
+        for tpCode,tpName in Course.BriefTypes.items():
+            if course.majorTypes[major] & tpCode:
+                s.append(tpName)
+        if s:
+            return ', '.join(s)
+        return '—'
 
     def readJson(self,filename='../data/courseLib.json'):
         with open(filename,encoding='utf-8',errors='ignore') as fp:
