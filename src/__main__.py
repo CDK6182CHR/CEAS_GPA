@@ -26,7 +26,7 @@ except:
     precision = 3
 
 info = f"""
-欢迎使用现工院GPA计算系统  更新：2019年10月16日
+欢迎使用现工院GPA计算系统  更新：2019年10月25日
 请在准备以下文件：
 成绩表文件，以.xls（小写）结尾，放在data/grades目录下。文件可以任意多，也可以在任一层的子目录下。
 替代课程表文件，文件名为data/map/substitute.xlsx
@@ -42,7 +42,7 @@ info = f"""
 缺课按0分计算：{zeroForAbsent}
 输出小数位数：{precision}
 如需修改请移步“参数设定”。
-输出文件为data/output.xlsx，该文件将被无条件覆盖。
+输出文件为data/output.xlsx和data/output_id.xlsx，这两个文件将被无条件覆盖。
 按ENTER继续计算，否则请关闭窗口。
 """
 
@@ -54,5 +54,6 @@ calculator = GpaCalculator(mode,start,end,useSubstitute,useFirst,firstYear,
 calculator.validate()
 calculator.calculate()
 calculator.saveExcel()
+calculator.saveIdOnlyExcel()
 
 input("计算完成，按ENTER关闭窗口")

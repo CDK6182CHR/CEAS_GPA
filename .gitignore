@@ -10,3 +10,4 @@ dist
 *.exe
 bin
 release
+*.pdf

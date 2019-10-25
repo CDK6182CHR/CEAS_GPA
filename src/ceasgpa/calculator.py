@@ -71,3 +71,40 @@ class GpaCalculator:
                 ws.append(line)
         wb.save(filename)
         wb.close()
+
+    def saveIdOnlyExcel(self,filename='../data/output_id.xlsx'):
+        """
+        导出只包含学号的发布版文档。
+        """
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = '概览'
+        ws.append(['导出时间：' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        header = ['学号','学分绩']
+        ws.append(header)
+        stu_grades = list(self.gradeLib.values())
+        stu_grades.sort(key=lambda x: x.gpa, reverse=True)
+        for stu_grade in stu_grades:
+            stu_grade: StudentGrade
+            ws.append(
+                (str(stu_grade.student.number), round(stu_grade.gpa, self.precision))
+            )
+
+        for major in CourseLib.ValidMajors:
+            ws = wb.create_sheet(major)
+            # 学号，姓名，总分，课程
+            courses = self.courseLib.majorCourseList(major, self.mode, self.start, self.end)
+            header = ('学号', '学分绩')
+            ws.append(header)
+            major_list = []  # 本专业学生表
+            for stu_id, stu_grade in self.gradeLib.items():
+                stu_grade: StudentGrade
+                if stu_grade.student.major != major:
+                    continue
+                major_list.append(stu_grade)
+            major_list.sort(key=lambda stu_grade: stu_grade.gpa, reverse=True)
+            for stu_grade in major_list:
+                line = (str(stu_grade.student.number), round(stu_grade.gpa, self.precision))
+                ws.append(line)
+        wb.save(filename)
+        wb.close()
