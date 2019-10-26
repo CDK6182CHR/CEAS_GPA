@@ -188,11 +188,12 @@ class GradeValidator:
                             print(f"学分数不一致 {course} {grade}")
                             self.log.write(
                                 f"学分数不一致 {course} {grade}\n")
-                        if '补考' in grade.flag and grade.total >= 60:
-                            self.log.write(
-                                f"补考及格按60分处理：{grade}\n"
-                            )
-                            grade.total = 60
+                        # 2019.10.26删除此逻辑
+                        # if '补考' in grade.flag and grade.total >= 60:
+                        #     self.log.write(
+                        #         f"补考及格按60分处理：{grade}\n"
+                        #     )
+                        #     grade.total = 60
                         del stu_grade._source[course_id]
             for course_id,grades in stu_grade._source.items():
                 self.log.write(f"非必修课 {grades[0]}\n")
@@ -255,6 +256,7 @@ class GradeValidator:
                     continue
                 # 开始映射
                 course = self.courseLib.courseById(newId)
+                self.log.write(f"substitute {grade} -> {course}\n")
                 grade.note += f"mapped from {grade.course_number}"
                 grade.course_number = course.id
                 grade.course_name = course.name

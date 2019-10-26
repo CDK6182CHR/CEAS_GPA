@@ -101,13 +101,13 @@ class CourseLib(dict):
         fp = open(filename, 'w', encoding='utf-8', errors='ignore')
         fp.write('# 现工院学分绩课程一览表\n')
         fp.write(f'更新时间：{datetime.now().strftime("%Y-%m-%d %H-%M-%S")}\n')
-        fp.write('学期 | 课程号 | 课程名 | '+' | '.join(CourseLib.ValidMajors)+'\n')
-        fp.write('-|-|-|'+'-|'*len(CourseLib.ValidMajors)+'\n')
+        fp.write('学期 | 课程号 | 课程名 | 学分数 | '+' | '.join(CourseLib.ValidMajors)+'\n')
+        fp.write('-|-|-|-|'+'-|'*len(CourseLib.ValidMajors)+'\n')
         lst = list(self.values())
         lst.sort(key=lambda x:(x.semester,x.id))
         for course in lst:
             course:Course
-            fp.write(f"{course.semester} | {course.id} | {course.name} |")
+            fp.write(f"{course.semester} | {course.id} | {course.name} | {course.credits} |")
             for major in CourseLib.ValidMajors:
                 fp.write(CourseLib.getMajorStr(course,major)+' | ')
             fp.write('\n')
