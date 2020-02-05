@@ -214,6 +214,7 @@ class GradeValidator:
                 seme = grade.mappedSemester(self.firstYear)
                 if seme>4:
                     highers.append(grade)
+                    continue
                 newId = PENumbers[seme-1]
                 self.log.write(f"{grade} -> {newId}\n")
                 grade.course_number = newId
@@ -223,7 +224,7 @@ class GradeValidator:
                 stu_grade.addGrade(grade)
             for grade in highers:
                 for id in PENumbers:
-                    if stu_grade._source.get(id,None) is None:
+                    if stu_grade._source.get(id,None) is not None:
                         continue
                     # 补充体育课数据
                     oldId = grade.course_number
