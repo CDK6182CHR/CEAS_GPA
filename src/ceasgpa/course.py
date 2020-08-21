@@ -3,6 +3,7 @@
 """
 from typing import Dict,Union
 
+
 class Course:
     Types = {
         0b10:'A类-本专业升学',

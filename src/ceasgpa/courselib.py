@@ -8,17 +8,19 @@ from .course import Course
 from datetime import datetime
 import json
 
+
 class CourseLib(dict):
     ValidMajors = ('材料物理','材料化学','光电信息','新能源','生物医学工程')
-    def __init__(self):
-        super(CourseLib, self).__init__()
-
     HeaderRow = 3
     CourseIdCol = 1
     CourseNameCol = 2
     CreditCol = 3
     SemesterCol = 4
     MajorStartCol = 6  # 个数为ValidMajors
+
+    def __init__(self):
+        super(CourseLib, self).__init__()
+
     def readLibFile(self,filename='../data/课程性质数据维护.xlsx'):
         import openpyxl
         self.clear()
@@ -75,12 +77,14 @@ class CourseLib(dict):
             fp.write(json.dumps(data,ensure_ascii=False))
             fp.write(';\n')
 
-    def saveMarkdown(self,filename='../data/分专业课程清单.md'):
+    def saveMarkdown(self,filename='../data/分专业课程清单.md',note=''):
         """
         按照专业->类别->学期的顺序计算。
         """
         fp = open(filename,'w',encoding='utf-8',errors='ignore')
-        fp.write('# 现工院课程学分绩计算清单\n')
+        fp.write('# 现代工学院课程学分绩计算清单\n')
+        fp.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        fp.write(f'更新  {note}\n')
         for major in self.ValidMajors:
             fp.write(f'## {major}\n')
             for tpCode,tpName in Course.Types.items():
@@ -94,13 +98,13 @@ class CourseLib(dict):
                             fp.write(f'{course.id} | {course.name} | {course.credits} | \n')
         fp.close()
 
-    def saveCourseMarkdown(self,filename='../data/课程清单.md'):
+    def saveCourseMarkdown(self,filename='../data/课程清单.md',note=''):
         """
         以课程为主要字段计算。按学期排序，同一学期内按课程号排序。
         """
         fp = open(filename, 'w', encoding='utf-8', errors='ignore')
-        fp.write('# 现工院学分绩课程一览表\n')
-        fp.write(f'更新时间：{datetime.now().strftime("%Y-%m-%d %H-%M-%S")}\n')
+        fp.write('# 现代工学院学分绩课程一览表\n')
+        fp.write(f'更新时间：{datetime.now().strftime("%Y-%m-%d %H-%M-%S")} {note}\n')
         fp.write('学期 | 课程号 | 课程名 | 学分数 | '+' | '.join(CourseLib.ValidMajors)+'\n')
         fp.write('-|-|-|-|'+'-|'*len(CourseLib.ValidMajors)+'\n')
         lst = list(self.values())
