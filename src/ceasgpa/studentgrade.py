@@ -17,7 +17,7 @@ class StudentGrade:
         self.absentCount = 0  # type:int  # 缺课门数
         self.absentNames = []
 
-    def addGrade(self,grade:Grade):
+    def addGrade(self,grade:Grade)->Grade:
         cur = self._source.setdefault(grade.course_number,[])
         if grade not in cur:
             cur.append(grade)
@@ -41,3 +41,6 @@ class StudentGrade:
         if grade is None:  # 缺课返回空格
             return ''
         return grade.total
+
+    def getCourseGradeObject(self,course_id:str)->Grade:
+        return self._table.get(course_id,None)

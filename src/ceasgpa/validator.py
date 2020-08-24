@@ -1,6 +1,11 @@
 """
 成绩有效性处理器。
 聚合于Calculator中
+2020.08.24添加说明：
+grade.note 用于处理本系统的映射。但体育、英语的正常映射不添加。
+grade.note2  教务系统原始备注。
+grade.flag  教务系统标记。
+以上三项都加到最后备注里。
 """
 from .gradelib import GradeLib
 from .studentgrade import StudentGrade,Grade
@@ -9,6 +14,7 @@ from .coursemaps import multiMapTable,singleMapTable,PENumbers,PERegex,substitut
 from datetime import datetime
 
 import re
+
 
 class GradeValidator:
     LogDir = '../log/'
@@ -65,7 +71,7 @@ class GradeValidator:
                     if mappedCourse is None:
                         print(f"Unexpceted None course {newId},"
                               f"mapped from {courseId}")
-                    stu_grade.addGrade(
+                    grade1 = stu_grade.addGrade(
                         Grade(
                             stu_number,
                             newId,
@@ -74,10 +80,11 @@ class GradeValidator:
                             grade[0].semester,
                             grade[0].grade_type,
                             grade[0].total,
-                            grade[0].note+" mapped",
+                            grade[0].note2,
                             grade[0].flag
                         )
                     )
+                    # grade.note += " mapped"
                 self.log.write(f"{courseId}->{newId}, student{stu_number}\n")
                 del stu_grade._source[courseId]
 
@@ -94,10 +101,11 @@ class GradeValidator:
                     continue
                 mappedCourse = self.courseLib.courseById(newId)
                 for grade in grades:
+                    old_descrip = str(grade)
                     grade.course_name = mappedCourse.name
                     grade.course_number = mappedCourse.id
-                    grade.note+=" mapped"
-                    self.log.write(f"{grade}->{mappedCourse}\n")
+                    # grade.note+=" mapped"
+                    self.log.write(f"{old_descrip}->{mappedCourse}\n")
                 stu_grade._source[newId]=stu_grade._source[courseId]
                 del stu_grade._source[courseId]
 
@@ -217,9 +225,10 @@ class GradeValidator:
                     continue
                 newId = PENumbers[seme-1]
                 self.log.write(f"{grade} -> {newId}\n")
+                note = f' mapped from {grade}'
                 grade.course_number = newId
                 grade.course_name = self.courseLib.courseById(newId).name
-                grade.note+=' mapped'
+                grade.note+=note
                 del stu_grade._source[course_id]
                 stu_grade.addGrade(grade)
             for grade in highers:
@@ -258,7 +267,7 @@ class GradeValidator:
                 # 开始映射
                 course = self.courseLib.courseById(newId)
                 self.log.write(f"substitute {grade} -> {course}\n")
-                grade.note += f"mapped from {grade.course_number}"
+                grade.note += f"mapped from {grade}"
                 grade.course_number = course.id
                 grade.course_name = course.name
                 del stu_grade._source[course_id]

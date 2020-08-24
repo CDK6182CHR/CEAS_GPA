@@ -19,7 +19,7 @@ class Grade:
         self.flag = flag
 
     def __str__(self):
-        return f"{self.stu_number} {self.course_number} {self.course_name} " \
+        return f"{self.stu_number} {self.course_number} {self.course_name} {self.credits} " \
                f"{self.semester} {self.total} {self.note2} {self.flag} {self.note}"
 
     def __eq__(self, other):

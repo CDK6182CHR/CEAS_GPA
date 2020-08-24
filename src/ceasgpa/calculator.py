@@ -1,11 +1,12 @@
 """
 计算器主类
 """
-from .courselib import CourseLib
+from .courselib import CourseLib, Course
 from .gradelib import GradeLib,StudentGrade
 from .studentlist import StudentList
 from .validator import GradeValidator
 import openpyxl
+from openpyxl.comments import Comment
 from datetime import datetime
 
 class GpaCalculator:
@@ -20,6 +21,10 @@ class GpaCalculator:
         self.mode = mode
         self.start = start
         self.end = end
+        self.useSubstitute = useSubstitute
+        self.useFirst = useFirst
+        self.firstYear = firstYear
+        self.zeroForAbsent = zeroForAbsent
         self.validator = GradeValidator(self.gradeLib,self.courseLib,
                                         mode,start,end,useSubstitute,useFirst,firstYear,zeroForAbsent)
 
@@ -36,7 +41,30 @@ class GpaCalculator:
     def saveExcel(self,filename='../data/output.xlsx'):
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = '概览'
+        if True:
+            ws.title = '配置'
+            """
+            mode = 2
+            startSemester = 1
+            endSemester = 5
+            useSubstitute = 1
+            useFirst = 1
+            firstYear = 2017
+            zeroForAbsent = 1
+            precision = 4
+            """
+            ws.append(('此文件由CEAS GPA Calculator自动生成，直接修改本文件可能会被后续运行覆盖。',))
+            ws.append(('项目','配置'))
+            ws.append(('课程集','1-学年' if self.mode==1 else '2-保研'))
+            ws.append(('开始学期',self.start))
+            ws.append(('结束学期',self.end))
+            ws.append(('允许替代课程','是' if self.useSubstitute else '否'))
+            ws.append(('仅使用初次成绩','是' if self.useFirst else '否'))
+            ws.append(('当前计算年级',self.firstYear))
+            ws.append(('缺课使用0分替代','是' if self.zeroForAbsent else '否'))
+            ws.append(('输出小数位数',self.precision))
+
+        ws = wb.create_sheet('概览')
         ws.append(['导出时间：'+datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
         header = ['学号','姓名','专业','学分绩','缺课门数','缺课表']
         ws.append(header)
@@ -64,11 +92,33 @@ class GpaCalculator:
                     continue
                 major_list.append(stu_grade)
             major_list.sort(key=lambda stu_grade:stu_grade.gpa,reverse=True)
+            row = 2  # 当前行号
+            start_col = 4
             for stu_grade in major_list:
                 line = [str(stu_grade.student.number),stu_grade.student.name,
                         round(stu_grade.gpa,self.precision)]+\
                 [stu_grade.getCourseGrade(course.id) for course in courses]
                 ws.append(line)
+                row += 1
+                for c, course in enumerate(courses):
+                    course:Course
+                    grade = stu_grade.getCourseGradeObject(course.id)
+                    txt = ""
+                    if grade is None:
+                        txt = "缺课，不计算本课程"
+                    elif grade.note:
+                        txt += f"Note1: {grade.note}\n"
+                    elif grade.note2:
+                        txt += f"Note2: {grade.note2}\n"
+                    elif grade.flag:
+                        txt += f"Flags: {grade.flag}\n"
+                    if txt:
+                        if grade is not None:
+                            txt += f'修读学期：{grade.semester}'
+                        ws.cell(row,c+start_col).comment = \
+                            Comment(txt,'CeasGpaCalculator')
+
+
         wb.save(filename)
         wb.close()
 
