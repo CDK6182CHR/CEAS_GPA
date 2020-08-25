@@ -17,6 +17,7 @@ class Grade:
         self.note = ""  # type:str  # 专用于本系统映射
         self.note2 = note2  # type:str
         self.flag = flag
+        self.oldId = ''
 
     def __str__(self):
         return f"{self.stu_number} {self.course_number} {self.course_name} {self.credits} " \

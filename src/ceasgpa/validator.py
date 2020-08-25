@@ -71,6 +71,11 @@ class GradeValidator:
                     if mappedCourse is None:
                         print(f"Unexpceted None course {newId},"
                               f"mapped from {courseId}")
+                        continue
+
+                    txt = str(grade[0])
+                    oldName = grade[0].course_name
+
                     grade1 = stu_grade.addGrade(
                         Grade(
                             stu_number,
@@ -84,8 +89,9 @@ class GradeValidator:
                             grade[0].flag
                         )
                     )
-                    # grade.note += " mapped"
-                self.log.write(f"{courseId}->{newId}, student{stu_number}\n")
+                    grade1.note += f"mapped: {oldName} {grade1.credits}学分"
+                    grade1.oldId = courseId
+                self.log.write(f"Multimap: {txt}->{grade1}\n")
                 del stu_grade._source[courseId]
 
     def singleMap(self):
@@ -100,6 +106,9 @@ class GradeValidator:
                 if newId is None:
                     continue
                 mappedCourse = self.courseLib.courseById(newId)
+                if mappedCourse is None:
+                    self.log.write(f"目标课程不在列表中{newId} mapped from: {courseId}")
+                    continue
                 for grade in grades:
                     old_descrip = str(grade)
                     grade.course_name = mappedCourse.name
@@ -224,6 +233,9 @@ class GradeValidator:
                     highers.append(grade)
                     continue
                 newId = PENumbers[seme-1]
+                if self.courseLib.courseById(newId) is None:
+                    self.log.write(f"目标课程不在列表中：{newId}")
+                    continue
                 self.log.write(f"{grade} -> {newId}\n")
                 note = f' mapped from {grade}'
                 grade.course_number = newId
