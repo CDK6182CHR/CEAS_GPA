@@ -5,7 +5,8 @@
 """
 from .grade import Grade
 from .student import Student
-from typing import Union,Dict,List
+from typing import Union,Dict,List,Iterable
+
 
 class StudentGrade:
     def __init__(self,student:Student):
@@ -21,6 +22,7 @@ class StudentGrade:
         cur = self._source.setdefault(grade.course_number,[])
         if grade not in cur:
             cur.append(grade)
+        return grade
 
     def calculate(self)->float:
         if not self._ok:
@@ -44,3 +46,7 @@ class StudentGrade:
 
     def getCourseGradeObject(self,course_id:str)->Grade:
         return self._table.get(course_id,None)
+
+    def grades(self)->Iterable[Grade]:
+        for _,grade in self._table.items():
+            yield grade

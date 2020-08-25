@@ -10,7 +10,7 @@ import json
 
 
 class CourseLib(dict):
-    ValidMajors = ('材料物理','材料化学','光电信息','新能源','生物医学工程')
+    ValidMajors = ('*工科试验班',)
     HeaderRow = 3
     CourseIdCol = 1
     CourseNameCol = 2

@@ -12,3 +12,6 @@ class Student:
 
     def __str__(self):
         return f"{self.number} {self.name} {self.major}"
+
+    def __eq__(self, other):
+        return self.numer == other.number

@@ -26,6 +26,7 @@ class StudentList(dict):
             name = ws.cell(row,self.NameCol).value
             major = ws.cell(row,self.MajorCol).value
             self[n]=Student(name,n,major)
+        print(f"StudentList::Read len={len(self)}")
         wb.close()
 
     def saveJson(self,filename='../data/stu_list.json'):

@@ -25,8 +25,8 @@ class GpaCalculator:
         self.useFirst = useFirst
         self.firstYear = firstYear
         self.zeroForAbsent = zeroForAbsent
-        self.validator = GradeValidator(self.gradeLib,self.courseLib,
-                                        mode,start,end,useSubstitute,useFirst,firstYear,zeroForAbsent)
+        self.validator = GradeValidator(self.gradeLib,self.courseLib,mode,start,end,
+                                        useSubstitute,useFirst,firstYear,zeroForAbsent,self.studentList)
 
     def validate(self):
         """
@@ -78,7 +78,7 @@ class GpaCalculator:
             )
 
         for major in CourseLib.ValidMajors:
-            ws = wb.create_sheet(major)
+            ws = wb.create_sheet(major.replace('*',''))
             # 学号，姓名，总分，课程
             courses = self.courseLib.majorCourseList(major,self.mode,self.start,self.end)
             header = ['学号','姓名','学分绩']+[course.name for course in courses]
@@ -141,7 +141,7 @@ class GpaCalculator:
             )
 
         for major in CourseLib.ValidMajors:
-            ws = wb.create_sheet(major)
+            ws = wb.create_sheet(major.replace('*',''))
             # 学号，姓名，总分，课程
             courses = self.courseLib.majorCourseList(major, self.mode, self.start, self.end)
             header = ('学号', '学分绩')

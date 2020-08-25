@@ -4,7 +4,7 @@
 """
 from .studentgrade import Grade,StudentGrade
 from .studentlist import StudentList,Student
-import xlrd,os
+import xlrd,os,openpyxl
 
 class GradeLib(dict):
     def __init__(self,studentList:StudentList):
@@ -73,6 +73,7 @@ class GradeLib(dict):
                 ))
             except KeyError:
                 print("Student not in list: ",stu_num)
+        print(f'Read file {filename}')
 
 
     def readFileList(self,root='../data/grades'):
@@ -81,6 +82,29 @@ class GradeLib(dict):
         """
         for a,b,c in os.walk(root):
             for t in c:
-                if t.endswith('.xls'):
+                if t.endswith('.xls') or t.endswith('xlsx'):
                     filename = a+'/'+t
                     self.readFile(filename)
+
+    def writeFIle(self,filename):
+        """
+        写文件。使得写出的文件能被本程序再次读取。
+        """
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        header = (
+            '学号','姓名','所属院系','课程编号','课程名称','学分','学时','学期','课程类别','公选类型',
+            '成绩类别','平时','期中','期末','总评','对应课程','备注','备注2','标记'
+        )
+        ws.append(header)
+        for num, stu_grade in self.items():
+            stu_grade:StudentGrade
+            stu = stu_grade.student
+            for grade in stu_grade.grades():
+                line = (
+                    str(num),stu.name,'',grade.course_number,grade.course_name,
+                    str(grade.credits),'',grade.semester,'','',grade.grade_type,'','','',
+                    grade.total,'',grade.note,grade.note2,grade.flag
+                )
+                ws.append(line)
+        wb.save(filename)

@@ -10,8 +10,10 @@ grade.flag  教务系统标记。
 from .gradelib import GradeLib
 from .studentgrade import StudentGrade,Grade
 from .courselib import CourseLib,Course
+from .studentlist import StudentList,Student
 from .coursemaps import multiMapTable,singleMapTable,PENumbers,PERegex,substituteMapTable
 from datetime import datetime
+import openpyxl
 
 import re
 
@@ -19,7 +21,7 @@ import re
 class GradeValidator:
     LogDir = '../log/'
     def __init__(self,gradeLib,courseLib:CourseLib,mode,start,end,useSubstitute,useFirst,firstYear:str,
-                 zeroForAbsent):
+                 zeroForAbsent,studentList:StudentList):
         self.gradeLib = gradeLib  # type:GradeLib
         self.courseLib = courseLib  # type:CourseLib
         self.mode = mode  # type:int
@@ -29,6 +31,9 @@ class GradeValidator:
         self.useFirst = useFirst  # type:bool
         self.firstYear = firstYear  # type:str  # 入学年份字符串。用于做学期映射。
         self.zeroForAbsent = zeroForAbsent  # type:bool
+        self.studentList = studentList  # type:StudentList
+        self.transStudentList = StudentList()  # type:StudentList
+        self.readTransList()
         self.log = open(
             self.LogDir+datetime.now().strftime('log %Y-%m-%d_%H-%M-%S.txt'),
             'w',encoding='utf-8',errors='ignore'
@@ -43,6 +48,7 @@ class GradeValidator:
         """
         接口方法
         """
+        self.preprocessCredits()
         self.multiMap()
         self.singleMap()
         self.choose()
@@ -51,10 +57,30 @@ class GradeValidator:
             self.substituteMap()
         self.filtByList()
 
+    def readTransList(self,filename='../data/跨大类.xlsx'):
+        """
+        读取转专业名单。名单中的，缺课不按0分处理。
+        """
+        wb = openpyxl.load_workbook(filename)
+        ws = wb.get_sheet_by_name(wb.sheetnames[0])
+        for row in range(1,ws.max_row+1):
+            try:
+                num = int(ws.cell(row,1).value)
+                name = ws.cell(row,2).value
+            except:
+                print(f"Validator::ReadTransList  数据错误！行号{row}")
+            else:
+                s = self.studentList.studentByNumber(num)
+                if s is not None:
+                    self.transStudentList[num] = s
+                else:
+                    print(f"Validator::ReadTransList  Invalid number: {num}")
+
     def multiMap(self):
         """
         对体验英语的特殊处理。一门体验英语映射到同一学期的两门英语课中。
         仍在list中完成。
+        【注意学分是按照映射后的课程！】
         """
         self.log.write("**********multiMap**********\n")
         for stu_number,stu_grade in self.gradeLib.items():
@@ -66,17 +92,21 @@ class GradeValidator:
                 if len(grade)!=1:
                     print(f"multiMap: more than one courses to be multi map, student {stu_number} course {courseId} length {len(grade)}")
 
+                txt = str(grade[0])
+                oldName = grade[0].course_name
+
                 for newId in multiMapTable[courseId]:
                     mappedCourse = self.courseLib.courseById(newId)
                     if mappedCourse is None:
                         print(f"Unexpceted None course {newId},"
                               f"mapped from {courseId}")
+                        continue
                     grade1 = stu_grade.addGrade(
                         Grade(
                             stu_number,
                             newId,
                             mappedCourse.name,
-                            mappedCourse.credits,
+                            mappedCourse.credits if newId != '00010011C' else 0,  # 特别处理二层次数学问题
                             grade[0].semester,
                             grade[0].grade_type,
                             grade[0].total,
@@ -84,8 +114,9 @@ class GradeValidator:
                             grade[0].flag
                         )
                     )
-                    # grade.note += " mapped"
-                self.log.write(f"{courseId}->{newId}, student{stu_number}\n")
+                    grade1.note += f"mapped: {oldName} {grade1.credits}学分"
+                    grade1.oldId = courseId
+                self.log.write(f"Multimap: {txt}->{grade1}\n")
                 del stu_grade._source[courseId]
 
     def singleMap(self):
@@ -100,6 +131,9 @@ class GradeValidator:
                 if newId is None:
                     continue
                 mappedCourse = self.courseLib.courseById(newId)
+                if mappedCourse is None:
+                    self.log.write(f"目标课程不在列表中{newId} mapped from: {courseId}")
+                    continue
                 for grade in grades:
                     old_descrip = str(grade)
                     grade.course_name = mappedCourse.name
@@ -108,6 +142,11 @@ class GradeValidator:
                     self.log.write(f"{old_descrip}->{mappedCourse}\n")
                 stu_grade._source[newId]=stu_grade._source[courseId]
                 del stu_grade._source[courseId]
+
+    def preprocessCredits(self):
+        """
+        用来特殊处理学分数需手工调整的情况。放在所有map前
+        """
 
     def choose(self):
         """
@@ -178,12 +217,15 @@ class GradeValidator:
                     if grades is None:
                         stu_grade.absentCount += 1
                         stu_grade.absentNames.append(course.name)
-                        if self.zeroForAbsent:
-                            stu_grade._table[course_id]=Grade(
-                                student.number,course_id,course.name,
-                                course.credits,'NA','NA',0.0,'缺数据',''
-                            )
-                            self.log.write(f"缺少必修课程：{course} {student} 自动添加0分数据\n")
+                        if self.zeroForAbsent and course.credits:  # for EEC: 非零学分才替代。0学分是菜单课。
+                            if self.transStudentList.get(stu_grade.student.number,None) is not None:
+                                self.log.write(f"跨大类学生缺少课程：{course} {student} 按忽略处理")
+                            else:
+                                stu_grade._table[course_id]=Grade(
+                                    student.number,course_id,course.name,
+                                    course.credits,'NA','NA',0.0,'缺数据',''
+                                )
+                                self.log.write(f"缺少必修课程：{course} {student} 自动添加0分数据\n")
                             # print(f"缺少必修课程：{course} {student} 自动添加0分数据")
                     else:
                         grade = grades[0]
@@ -224,6 +266,9 @@ class GradeValidator:
                     highers.append(grade)
                     continue
                 newId = PENumbers[seme-1]
+                if self.courseLib.courseById(newId) is None:
+                    self.log.write(f"目标课程不在列表中：{newId}")
+                    continue
                 self.log.write(f"{grade} -> {newId}\n")
                 note = f' mapped from {grade}'
                 grade.course_number = newId
