@@ -49,7 +49,7 @@ class GradeLib(dict):
             semester = ws.cell_value(row,self.SemesterCol)
             course_type = ws.cell_value(row,self.TypeCol)
             total_str = ws.cell_value(row,self.TotalCol)
-            if not total_str:
+            if total_str is None or total_str == '':
                 # 退选成绩为空
                 continue
             try:

@@ -81,9 +81,9 @@ class GpaCalculator:
             ws = wb.create_sheet(major)
             # 学号，姓名，总分，课程
             courses = self.courseLib.majorCourseList(major,self.mode,self.start,self.end)
-            header = ['学号','姓名','学分绩']+[course.name for course in courses]
+            header = ['学号','姓名','学分绩','学分总数']+[course.name for course in courses]
             ws.append(header)
-            second = ['','','']+[course.credits for course in courses]
+            second = ['','','','']+[course.credits for course in courses]
             ws.append(second)
             major_list = []
             for stu_id,stu_grade in self.gradeLib.items():
@@ -93,10 +93,10 @@ class GpaCalculator:
                 major_list.append(stu_grade)
             major_list.sort(key=lambda stu_grade:stu_grade.gpa,reverse=True)
             row = 2  # 当前行号
-            start_col = 4
+            start_col = 5
             for stu_grade in major_list:
-                line = [str(stu_grade.student.number),stu_grade.student.name,
-                        round(stu_grade.gpa,self.precision)]+\
+                line = [str(stu_grade.student.number), stu_grade.student.name,
+                        round(stu_grade.gpa, self.precision), stu_grade.totalCredits()] + \
                 [stu_grade.getCourseGrade(course.id) for course in courses]
                 ws.append(line)
                 row += 1
@@ -106,17 +106,17 @@ class GpaCalculator:
                     txt = ""
                     if grade is None:
                         txt = "缺课，不计算本课程"
-                    elif grade.note:
-                        txt += f"Note1: {grade.note}\n"
-                    elif grade.note2:
-                        txt += f"Note2: {grade.note2}\n"
-                    elif grade.flag:
-                        txt += f"Flags: {grade.flag}\n"
-                    if txt:
-                        if grade is not None:
+                    else:
+                        if grade.note:
+                            txt += f"Note1: {grade.note}\n"
+                        if grade.note2:
+                            txt += f"Note2: {grade.note2}\n"
+                        if grade.flag:
+                            txt += f"Flags: {grade.flag}\n"
+                        if txt:
                             txt += f'修读学期：{grade.semester}'
-                        ws.cell(row,c+start_col).comment = \
-                            Comment(txt,'CeasGpaCalculator')
+                    if txt:
+                        ws.cell(row, c + start_col).comment = Comment(txt, 'CeasGpaCalculator')
 
 
         wb.save(filename)

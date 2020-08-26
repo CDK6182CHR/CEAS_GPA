@@ -234,7 +234,7 @@ class GradeValidator:
                     continue
                 newId = PENumbers[seme-1]
                 if self.courseLib.courseById(newId) is None:
-                    self.log.write(f"目标课程不在列表中：{newId}")
+                    self.log.write(f"目标课程不在列表中：{newId}\n")
                     continue
                 self.log.write(f"{grade} -> {newId}\n")
                 note = f' mapped from {grade}'

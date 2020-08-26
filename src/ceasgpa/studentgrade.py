@@ -44,3 +44,9 @@ class StudentGrade:
 
     def getCourseGradeObject(self,course_id:str)->Grade:
         return self._table.get(course_id,None)
+
+    def totalCredits(self)->float:
+        """
+        2020年8月25日新增，返回总学分数，用于发生课程替代时的校验。
+        """
+        return sum((grade.credits for grade in self.grades()))
