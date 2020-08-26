@@ -4,7 +4,13 @@
 只保存学号，不进行姓名检查！
 """
 
+
 class Grade:
+    # 映射记号
+    NotMapped = 0  # 原始课程，没有被映射过
+    SingleMapped = 1  # 经单映射获得的课程
+    MultiMapped = 2  # 经多映射获得的课程
+    SubstituteMapped = 3  # 经替代课程映射获得的
     def __init__(self,stu_number,course_number,course_name,credits,
                  semester,grade_type,total,note2,flag):
         self.stu_number = stu_number  # type:int
@@ -18,6 +24,7 @@ class Grade:
         self.note2 = note2  # type:str
         self.flag = flag
         self.oldId = ''
+        self.mappedFlag = self.NotMapped
 
     def __str__(self):
         return f"{self.stu_number} {self.course_number} {self.course_name} {self.credits} " \

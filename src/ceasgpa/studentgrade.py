@@ -50,3 +50,9 @@ class StudentGrade:
     def grades(self)->Iterable[Grade]:
         for _,grade in self._table.items():
             yield grade
+
+    def totalCredits(self)->float:
+        """
+        2020年8月25日新增，返回总学分数，用于发生课程替代时的校验。
+        """
+        return sum((grade.credits for grade in self.grades()))

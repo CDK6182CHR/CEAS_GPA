@@ -48,14 +48,17 @@ class GradeValidator:
         """
         接口方法
         """
-        self.preprocessCredits()
+        self.removeDuplicate()
+        self.preMapProcess()
         self.multiMap()
         self.singleMap()
         self.choose()
         self.PEMap()
         if self.useSubstitute:
             self.substituteMap()
+        self.postMapProcess()
         self.filtByList()
+        self.postFiltProcess()
 
     def readTransList(self,filename='../data/跨大类.xlsx'):
         """
@@ -143,10 +146,75 @@ class GradeValidator:
                 stu_grade._source[newId]=stu_grade._source[courseId]
                 del stu_grade._source[courseId]
 
-    def preprocessCredits(self):
+    def removeDuplicate(self):
         """
-        用来特殊处理学分数需手工调整的情况。放在所有map前
+        删除层次上冲突的课程。
         """
+        self.log.write("*******removeDuplicate******\n")
+        for stu_num, stu_grade in self.gradeLib.items():
+            stu_grade:StudentGrade
+            if stu_grade._source.get('00010014B') is not None:  # 有体验数学下就推定按照体验数学
+                for course_id in ('00010011A','00010011B','00010011C'):
+                    try:
+                        del stu_grade._source[course_id]
+                    except KeyError:
+                        pass
+                    else:
+                        self.log.write(f"删除一层次数学，按体验数学处理：{stu_num} delete {course_id}\n")
+
+    def preMapProcess(self):
+        """
+        放在所有map前。
+        特殊处理所有的需要调整分数的情况。
+        """
+        self.log.write("*******preMapProcess******\n")
+        for num,stu_grade in self.gradeLib.items():
+            stu_grade:StudentGrade
+            for courseId, grades in stu_grade._source.items():
+                for grade in grades:
+                    if grade.course_number.startswith('00010014'):
+                        # 体验数学
+                        tot = grade.total
+                        grade.total*=0.6
+                        grade.note2 += f' 体验数学0.6倍率。原：{tot}'
+                        self.log.write(f'体验数学按0.6倍率计算：{grade}\n')
+                    elif grade.course_number.startswith('41000110'):
+                        tot = grade.total
+                        grade.total*=0.8
+                        grade.note2 += f' 体验英语0.8倍率。原：{tot}'
+                        self.log.write(f'体验英语按0.8倍率计算：{grade}\n')
+
+    def postMapProcess(self):
+        """
+        所有映射结束后特殊处理，用于处理体验数学下的问题。
+        """
+        self.log.write("*******postMapProcess******\n")
+        for num,stu_grade in self.gradeLib.items():
+            stu_grade:StudentGrade
+            for courseId, grades in stu_grade._source.items():
+                for grade in grades:
+                    if grade.course_number == '00010011B' and grade.oldId == '00010014B':
+                        # 体验数学下，6个学分
+                        grade.credits = 6
+                        self.log.write(f'体验数学下按照6学分计算：{grade}\n')
+
+    def postFiltProcess(self):
+        """
+        挑选完必修课后，再来特殊处理
+        用于处理：不按*层次计算，但多了高等代数1的问题。
+        """
+        self.log.write("*******postFiltProcess******\n")
+        psudoIds = ['11000020A','11000030']  # 赝课程的ID
+        levelIds = ['30000010A','11000010A']
+        for stu_num,stu_grade in self.gradeLib.copy().items():
+            stu_grade:StudentGrade
+            for id in psudoIds:
+                g = stu_grade.getCourseGradeObject(id)
+                g0 = stu_grade.getCourseGradeObject('00010011A')
+                if g is not None and (g0.mappedFlag != Grade.SubstituteMapped or g0.oldId not in levelIds):
+                    del stu_grade._table[id]
+                    print(f'非*层次数学，删除赝课程：{g}')
+                    self.log.write(f'非*层次数学，删除赝课程：{g}\n')
 
     def choose(self):
         """
@@ -156,6 +224,19 @@ class GradeValidator:
         for stu_number,stu_grade in self.gradeLib.items():
             stu_grade:StudentGrade
             for courseId, grades in stu_grade._source.copy().items():
+                # 2020.08.25添加：无条件剔除“注销”成绩
+                if True:
+                    if len(grades) == 1:
+                        continue
+                    while len(grades) > 1:
+                        for grade in grades.copy():
+                            if '注销' in grade.grade_type:
+                                print(f'By type 注销: delete {grade}')
+                                self.log.write(f'By type 注销: delete {grade}\n')
+                                grades.remove(grade)
+                                break
+                        else:
+                            break
                 if self.useFirst:
                     if len(grades)==1:
                         continue
@@ -218,14 +299,15 @@ class GradeValidator:
                         stu_grade.absentCount += 1
                         stu_grade.absentNames.append(course.name)
                         if self.zeroForAbsent and course.credits:  # for EEC: 非零学分才替代。0学分是菜单课。
-                            if self.transStudentList.get(stu_grade.student.number,None) is not None:
-                                self.log.write(f"跨大类学生缺少课程：{course} {student} 按忽略处理")
-                            else:
-                                stu_grade._table[course_id]=Grade(
-                                    student.number,course_id,course.name,
-                                    course.credits,'NA','NA',0.0,'缺数据',''
-                                )
-                                self.log.write(f"缺少必修课程：{course} {student} 自动添加0分数据\n")
+                            # 2020.08.25：删除跨大类不用0分替代的逻辑。
+                            # if self.transStudentList.get(stu_grade.student.number,None) is not None:
+                            #     self.log.write(f"跨大类学生缺少课程：{course} {student} 按忽略处理")
+                            # else:
+                            stu_grade._table[course_id]=Grade(
+                                student.number,course_id,course.name,
+                                course.credits,'NA','NA',0.0,'缺数据',''
+                            )
+                            self.log.write(f"缺少必修课程：{course} {student} 自动添加0分数据\n")
                             # print(f"缺少必修课程：{course} {student} 自动添加0分数据")
                     else:
                         grade = grades[0]
@@ -235,9 +317,15 @@ class GradeValidator:
                             # self.log.write(
                             #     f"课程名不一致 {course} {grade}\n")
                         elif grade.credits != course.credits:
-                            print(f"学分数不一致 {course} {grade}")
-                            self.log.write(
-                                f"学分数不一致 {course} {grade}\n")
+                            if course.majorTypes[student.major] == 3:
+                                # 2020.08.25新增：只对3类课程打印学分数不一致警告。1类课程是菜单课，不管
+                                print(f"学分数不一致 {course} {grade}")
+                                self.log.write(
+                                    f"学分数不一致 {course} {grade}\n")
+                                grade.note2 += f" {grade.credits}学分"
+                            elif course.majorTypes[student.major] == 1: # 对于菜单课的特殊处理，按照0学分！
+                                grade.credits = course.credits
+
                         # 2019.10.26删除此逻辑
                         # if '补考' in grade.flag and grade.total >= 60:
                         #     self.log.write(
@@ -267,7 +355,7 @@ class GradeValidator:
                     continue
                 newId = PENumbers[seme-1]
                 if self.courseLib.courseById(newId) is None:
-                    self.log.write(f"目标课程不在列表中：{newId}")
+                    self.log.write(f"目标课程不在列表中：{newId}\n")
                     continue
                 self.log.write(f"{grade} -> {newId}\n")
                 note = f' mapped from {grade}'
@@ -302,6 +390,7 @@ class GradeValidator:
             stu_grade:StudentGrade
             for course_id,grades in stu_grade._source.copy().items():
                 grade = grades[0]
+                oldId = grade.course_number
                 newId = substituteMapTable.get(grade.course_number,None)
                 if newId is None:
                     continue
@@ -311,10 +400,15 @@ class GradeValidator:
                     continue
                 # 开始映射
                 course = self.courseLib.courseById(newId)
+                if course is None:
+                    print(f"Mapped course not found: {newId}, from {grade}")
+                    exit(343)
                 self.log.write(f"substitute {grade} -> {course}\n")
                 grade.note += f"mapped from {grade}"
                 grade.course_number = course.id
                 grade.course_name = course.name
+                grade.oldId = oldId
+                grade.mappedFlag = Grade.SubstituteMapped
                 del stu_grade._source[course_id]
                 stu_grade.addGrade(grade)
 
